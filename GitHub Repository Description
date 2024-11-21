@@ -1,0 +1,4 @@
+Title: Netflix Movies and TV Shows Analysis
+Short Description: "A machine learning project to analyze Netflix content and predict user preferences."
+Tags: Python, Machine Learning, EDA, Netflix, Recommendation Systems
+Jupyter notebook (notebooks/netflix_analysis.ipynb) that walks through the entire process interactively.
