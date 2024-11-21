@@ -1,0 +1,21 @@
+Netflix-Churn-Prediction/
+│
+├── data/
+│   ├── netflix_titles.csv           # Original dataset
+│   └── cleaned_data.csv             # Cleaned dataset (if applicable)
+│
+├── notebooks/
+│   └── netflix_analysis.ipynb       # Jupyter notebook for analysis
+│
+├── src/
+│   ├── preprocessing.py             # Python script for data cleaning/preprocessing
+│   ├── modeling.py                  # Python script for model building/evaluation
+│   └── visualization.py             # Python script for plots/visualizations
+│
+├── results/
+│   └── model_metrics.txt            # Summary of model evaluation results
+│   └── visualizations/              # Folder for images like confusion matrix, bar charts, etc.
+│
+├── README.md                        # Overview of the project
+├── requirements.txt                 # List of Python dependencies
+└── LICENSE                          # License for the repository
