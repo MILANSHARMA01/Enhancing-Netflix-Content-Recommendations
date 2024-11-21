@@ -1,0 +1,125 @@
+This code uses libraries like pandas, scikit-learn, and XGBoost for data analysis, preprocessing, and model building. The dataset is assumed to be in a CSV file named `netflix_titles.csv`.
+
+### **Step-by-Step Code**
+
+```python
+# Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, classification_report, roc_auc_score, confusion_matrix
+
+# Step 1: Load the dataset
+df = pd.read_csv('netflix_titles.csv')
+
+# Step 2: Data Cleaning
+# Handle missing values
+df['director'] = df['director'].fillna('Unknown')
+df['cast'] = df['cast'].fillna('Unknown')
+df['country'] = df['country'].fillna(df['country'].mode()[0])  # Mode imputation
+df['rating'] = df['rating'].fillna(df['rating'].mode()[0])    # Mode imputation
+df['duration'] = df['duration'].fillna('0 min')  # Fill missing durations
+
+# Extract numerical values from duration
+df['duration'] = df['duration'].str.extract('(\d+)').astype(float)
+
+# Step 3: Feature Engineering
+# Binary encoding for Type (Movie/TV Show)
+df['type'] = df['type'].apply(lambda x: 1 if x == 'Movie' else 0)
+
+# Extract year from date_added
+df['date_added'] = pd.to_datetime(df['date_added'])
+df['year_added'] = df['date_added'].dt.year
+df['year_added'] = df['year_added'].fillna(df['year_added'].median())  # Fill missing years
+
+# Encoding categorical features
+encoder = OneHotEncoder(drop='first', sparse=False)
+encoded_genres = encoder.fit_transform(df[['listed_in']])
+genre_df = pd.DataFrame(encoded_genres, columns=encoder.get_feature_names_out(['genre']))
+
+# Merge encoded genres with the main dataframe
+df = pd.concat([df, genre_df], axis=1)
+
+# Step 4: Prepare data for modeling
+# Select features and target
+features = ['type', 'duration', 'year_added'] + list(genre_df.columns)
+target = 'popularity'  # Define popularity as a binary target based on certain criteria (e.g., user views, ratings)
+df[target] = np.random.choice([0, 1], size=len(df))  # Placeholder for target variable
+
+X = df[features]
+y = df[target]
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Scale numerical features
+scaler = StandardScaler()
+X_train[['duration', 'year_added']] = scaler.fit_transform(X_train[['duration', 'year_added']])
+X_test[['duration', 'year_added']] = scaler.transform(X_test[['duration', 'year_added']])
+
+# Step 5: Build and Train the Model
+model = XGBClassifier(random_state=42, use_label_encoder=False, eval_metric='logloss')
+model.fit(X_train, y_train)
+
+# Step 6: Evaluate the Model
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+roc_auc = roc_auc_score(y_test, y_pred)
+
+print(f"Accuracy: {accuracy * 100:.2f}%")
+print(f"ROC-AUC Score: {roc_auc:.2f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Popular', 'Popular'], yticklabels=['Not Popular', 'Popular'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Step 7: Feature Importance
+importances = model.feature_importances_
+feature_importance_df = pd.DataFrame({'Feature': features, 'Importance': importances}).sort_values(by='Importance', ascending=False)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Importance', y='Feature', data=feature_importance_df)
+plt.title('Feature Importance')
+plt.show()
+```
+
+---
+
+### **Explanation of the Code**
+
+1. **Data Cleaning**:
+   - Handles missing values for key columns like `director`, `cast`, `country`, `rating`, and `duration`.
+   - Extracts numerical values from `duration` and processes `date_added` to create a new feature `year_added`.
+
+2. **Feature Engineering**:
+   - Encodes categorical features like `listed_in` (genres) using `OneHotEncoder`.
+   - Adds a binary column for `type` (1 for movies, 0 for TV shows).
+
+3. **Data Splitting and Preprocessing**:
+   - Splits the data into training and testing sets.
+   - Scales numerical features (`duration` and `year_added`) for better model performance.
+
+4. **Model Building and Evaluation**:
+   - Uses XGBoost (`XGBClassifier`) for prediction.
+   - Evaluates the model using accuracy, classification report, and ROC-AUC.
+
+5. **Visualization**:
+   - Plots the confusion matrix and feature importance for insights into the model’s performance and key drivers of user preferences.
+
+---
+
+### **Next Steps**
+- Replace the placeholder `popularity` target variable with real user engagement data (if available).
+- Tune the model’s hyperparameters for better performance.
+- Explore additional algorithms like Neural Networks for improved predictions.
